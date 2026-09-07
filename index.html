@@ -205,16 +205,19 @@
 
   async function load() {
     try {
-      const result = await localStorage.get(STORAGE_KEY, false);
-      if (result && result.value) state = JSON.parse(result.value);
-    } catch (e) { /* fresh start */ }
+      const result = localStorage.getItem(STORAGE_KEY);
+      if (result) state = JSON.parse(result);
+    } catch (e) { /* inici des de zero */ }
     render();
   }
-  async function save() {
+
+  function save() {
     try {
-      const res = await localStorage.set(STORAGE_KEY, JSON.stringify(state), false);
-      saveError = !res;
-    } catch (e) { saveError = true; }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveError = false;
+    } catch (e) { 
+      saveError = true; 
+    }
   }
 
   function metricVal(entry) { return entry.weight != null ? entry.weight : entry.value; }
