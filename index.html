@@ -62,7 +62,6 @@
   .gl-btn:hover { background:var(--iron-dim); }
   .gl-btn-mat { background:var(--mat-dim); }
   .gl-btn-mat:hover { background:var(--mat); }
-  .gl-btn-ghost { background:transparent; color:var(--steel); border:1px solid var(--line); }
 
   .gl-hm-toggle { display:flex; gap:6px; margin:14px 0 8px; }
   .gl-hm-btn { flex:1; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px; font-size:11px; font-weight:600; border-radius:3px; cursor:pointer; }
@@ -203,7 +202,7 @@
     return 'var(--mat)';
   }
 
-  async function load() {
+  function load() {
     try {
       const result = localStorage.getItem(STORAGE_KEY);
       if (result) state = JSON.parse(result);
@@ -215,9 +214,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       saveError = false;
-    } catch (e) { 
-      saveError = true; 
-    }
+    } catch (e) { saveError = true; }
   }
 
   function metricVal(entry) { return entry.weight != null ? entry.weight : entry.value; }
@@ -265,11 +262,11 @@
     render();
   }
 
-  async function resetAll() {
+  function resetAll() {
     if (!confirm('Vols esborrar tot el registre? Aquesta acció no es pot desfer.')) return;
     state = { entries: [], exerciseState: {} };
     expandedId = null;
-    await save();
+    save();
     render();
   }
 
@@ -393,7 +390,7 @@
     const unit = unitLabel(cat);
     const anteriorLine = st ? ('Anterior: ' + (isWeight ? st.lastWeight + ' ' + unit + ' · ' : '') + st.lastValue + (isWeight ? ' reps' : ' ' + unit) + ' (' + fmtDate(st.lastDate) + ')')
       : 'Anterior: —';
-    const maxLine = st && st.maxWeight != null ? ('Màxim: ' + st.maxWeight + (isWeight ? ' ' + unit : ' ' + unit) + ' (' + fmtDate(st.maxDate) + ')') : 'Màxim: —';
+    const maxLine = st && st.maxWeight != null ? ('Màxim: ' + st.maxWeight + ' ' + unit + ' (' + fmtDate(st.maxDate) + ')') : 'Màxim: —';
     const targetLine = isWeight
       ? (target.weight != null ? ('A superar: <b>' + target.weight + ' ' + unit + ' / ' + target.value + ' reps</b>') : 'Introdueix el pes inicial')
       : ('A superar: <b>' + target.value + ' ' + unit + '</b>');
@@ -457,8 +454,8 @@
     const legend = series.map(s => '<span><span class="gl-dot" style="background:' + s.color + '"></span>' + s.label + '</span>').join('');
     const tableRows = ids.map(id => {
       const st = state.exerciseState[id]; const cat = CATALOG[id]; const unit = unitLabel(cat);
-      const anterior = st ? ((cat.metric === 'weight' ? st.lastWeight + unit.replace('kg','kg').slice(0,0) + ' ' + unit + ' / ' : '') + st.lastValue + (cat.metric === 'weight' ? ' reps' : ' ' + unit)) : '—';
-      const maxim = st && st.maxWeight != null ? st.maxWeight + (cat.metric === 'weight' ? ' ' + unit : ' ' + unit) : '—';
+      const anterior = st ? ((cat.metric === 'weight' ? st.lastWeight + ' ' + unit + ' / ' : '') + st.lastValue + (cat.metric === 'weight' ? ' reps' : ' ' + unit)) : '—';
+      const maxim = st && st.maxWeight != null ? st.maxWeight + ' ' + unit : '—';
       return '<tr><td>' + cat.name + '</td><td>' + anterior + '</td><td>' + maxim + '</td></tr>';
     }).join('');
 
@@ -480,7 +477,7 @@
 
   function renderConfigTab() {
     return '<div class="gl-panel"><h2>Configuració</h2>' +
-      '<p class="gl-empty">El registre es desa automàticament. Si vols començar de zero:</p>' +
+      '<p class="gl-empty">El registre es desa automàticament al teu dispositiu.</p>' +
       '<div class="gl-reset-row"><button id="gl-reset-btn">Esborrar tot el registre</button></div>' +
       (saveError ? '<p class="gl-error">No s\'ha pogut desar l\'últim canvi. Torna-ho a provar.</p>' : '') +
       '</div>';
@@ -507,30 +504,47 @@
       body +
       '<div class="gl-navbar">' +
         ['exercicis','progres','heatmap','config'].map(t => {
-          const labels = { exercicis:'Exercicis', progres:'Progrés Global', heatmap:'Heatmap Anual', config:'Configuració' };
+          const labels = { exercicis:'Exercicis', progres:'Progrés', heatmap:'Heatmap', config:'Config' };
           return '<button class="gl-nav-btn ' + (activeTab === t ? 'active' : '') + '" data-tab="' + t + '">' + navIcon(t) + '<span>' + labels[t] + '</span></button>';
         }).join('') +
       '</div>';
 
-    root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { activeTab = b.dataset.tab; render(); }));
-    root.querySelectorAll('[data-chip]').forEach(b => b.addEventListener('click', () => { chipFilter = b.dataset.chip; render(); }));
-    root.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => {
-      const id = b.dataset.toggle;
+    root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', e => {
+      activeTab = e.currentTarget.getAttribute('data-tab');
+      render();
+    }));
+
+    root.querySelectorAll('[data-chip]').forEach(b => b.addEventListener('click', e => {
+      chipFilter = e.currentTarget.getAttribute('data-chip');
+      render();
+    }));
+
+    root.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', e => {
+      const id = e.currentTarget.getAttribute('data-toggle');
       expandedId = expandedId === id ? null : id;
-      hmMode = 'mensual'; hmYear = now.getFullYear(); hmMonth = now.getMonth();
       render();
     }));
-    root.querySelectorAll('[data-save]').forEach(b => b.addEventListener('click', () => saveEntry(b.dataset.save)));
-    root.querySelectorAll('[data-hmmode]').forEach(b => b.addEventListener('click', () => { hmMode = b.dataset.hmmode; render(); }));
-    root.querySelectorAll('[data-hmnav]').forEach(b => b.addEventListener('click', () => {
-      const action = b.dataset.hmnav;
-      if (action === 'prevmonth') { hmMonth--; if (hmMonth < 0) { hmMonth = 11; hmYear--; } }
-      if (action === 'nextmonth') { hmMonth++; if (hmMonth > 11) { hmMonth = 0; hmYear++; } }
-      if (action === 'prevyear') { if (activeTab === 'heatmap') globalYear--; else hmYear--; }
-      if (action === 'nextyear') { if (activeTab === 'heatmap') globalYear++; else hmYear++; }
+
+    root.querySelectorAll('[data-save]').forEach(b => b.addEventListener('click', e => {
+      const id = e.currentTarget.getAttribute('data-save');
+      saveEntry(id);
+    }));
+
+    root.querySelectorAll('[data-hmmode]').forEach(b => b.addEventListener('click', e => {
+      hmMode = e.currentTarget.getAttribute('data-hmmode');
       render();
     }));
-    const resetBtn = root.querySelector('#gl-reset-btn');
+
+    root.querySelectorAll('[data-hmnav]').forEach(b => b.addEventListener('click', e => {
+      const nav = e.currentTarget.getAttribute('data-hmnav');
+      if (nav === 'prevmonth') { hmMonth--; if (hmMonth < 0) { hmMonth = 11; hmYear--; } }
+      if (nav === 'nextmonth') { hmMonth++; if (hmMonth > 11) { hmMonth = 0; hmYear++; } }
+      if (nav === 'prevyear') { if (activeTab === 'heatmap') globalYear--; else hmYear--; }
+      if (nav === 'nextyear') { if (activeTab === 'heatmap') globalYear++; else hmYear++; }
+      render();
+    }));
+
+    const resetBtn = document.getElementById('gl-reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetAll);
   }
 
