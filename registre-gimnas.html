@@ -1,0 +1,536 @@
+<!-- Registre de gimnàs: llistat d'exercicis amb "anterior/màxim/a superar", heatmap setmanal/mensual/anual i progrés global -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+
+  #gymlog-root {
+    --bg: #1E2023;
+    --panel: #26292E;
+    --panel-2: #2C3036;
+    --line: #3A3D42;
+    --chalk: #EDE9E1;
+    --steel: #9A9D9F;
+    --iron: #C4402F;
+    --iron-dim: #7A2A21;
+    --mat: #6E8F7C;
+    --mat-dim: #3E5548;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--chalk);
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 18px 14px 90px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    position: relative;
+  }
+  #gymlog-root * { box-sizing: border-box; }
+
+  .gl-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; padding-bottom:12px; border-bottom:3px solid var(--iron); }
+  .gl-title { font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.5px; margin:0; }
+  .gl-sub { color:var(--steel); font-size:11px; margin:0; }
+
+  .gl-chips { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; }
+  .gl-chip { flex-shrink:0; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px 12px; font-size:12px; font-weight:600; border-radius:14px; cursor:pointer; }
+  .gl-chip.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
+  .gl-mobility-hint { color:var(--steel); font-size:11px; margin:-4px 0 10px 0; line-height:1.4; }
+
+  .gl-card { background:var(--panel); border:1px solid var(--line); border-radius:6px; margin-bottom:10px; overflow:hidden; }
+  .gl-card-head { display:flex; align-items:center; gap:12px; padding:12px; cursor:pointer; }
+  .gl-icon { flex-shrink:0; width:44px; height:44px; border-radius:6px; background:var(--panel-2); display:flex; align-items:center; justify-content:center; color:var(--mat); }
+  .gl-card-info { flex:1; min-width:0; }
+  .gl-card-name { font-weight:600; font-size:13.5px; margin-bottom:3px; }
+  .gl-card-line { color:var(--steel); font-size:11px; line-height:1.5; }
+  .gl-card-target { color:var(--chalk); font-size:11.5px; font-weight:700; margin-top:2px; }
+  .gl-card-target b { color:var(--mat); }
+  .gl-chevron { color:var(--steel); font-size:18px; flex-shrink:0; transition:transform .15s; }
+  .gl-chevron.open { transform:rotate(90deg); }
+
+  .gl-detail { padding:0 14px 16px; border-top:1px solid var(--line); }
+  .gl-detail-banner { background:var(--panel-2); border-left:3px solid var(--mat); padding:8px 10px; margin:12px 0; border-radius:3px; font-size:12.5px; }
+  .gl-detail-banner b { color:var(--mat); }
+
+  .gl-row { display:flex; gap:8px; margin-bottom:10px; }
+  .gl-field { flex:1; display:flex; flex-direction:column; gap:4px; }
+  .gl-field label { font-size:10px; color:var(--steel); }
+  .gl-field input, .gl-field select {
+    background:var(--panel-2); border:1px solid var(--line); color:var(--chalk);
+    padding:8px; border-radius:3px; font-size:14px; font-family:'Inter',sans-serif; width:100%;
+  }
+  .gl-field input:focus, .gl-field select:focus { outline:2px solid var(--iron); outline-offset:1px; }
+
+  .gl-btn { background:var(--iron); color:#fff; border:none; padding:9px 14px; font-weight:600; font-size:13px; border-radius:3px; cursor:pointer; width:100%; }
+  .gl-btn:hover { background:var(--iron-dim); }
+  .gl-btn-mat { background:var(--mat-dim); }
+  .gl-btn-mat:hover { background:var(--mat); }
+  .gl-btn-ghost { background:transparent; color:var(--steel); border:1px solid var(--line); }
+
+  .gl-hm-toggle { display:flex; gap:6px; margin:14px 0 8px; }
+  .gl-hm-btn { flex:1; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px; font-size:11px; font-weight:600; border-radius:3px; cursor:pointer; }
+  .gl-hm-btn.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
+
+  .gl-hm-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .gl-hm-nav button { background:none; border:1px solid var(--line); color:var(--chalk); border-radius:3px; padding:2px 9px; cursor:pointer; }
+  .gl-hm-nav span { font-size:12px; color:var(--steel); text-transform:capitalize; }
+
+  .gl-week-grid { display:flex; gap:4px; }
+  .gl-week-cell-wrap { flex:1; text-align:center; }
+  .gl-week-cell { width:100%; aspect-ratio:1; border-radius:3px; margin-bottom:3px; }
+  .gl-week-day-label { font-size:9px; color:var(--steel); }
+
+  .gl-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .gl-dow { color:var(--steel); font-size:9px; text-align:center; padding-bottom:2px; }
+  .gl-cell { aspect-ratio:1; border-radius:3px; }
+  .gl-cell-today { outline:2px solid var(--chalk); outline-offset:-2px; }
+
+  .gl-year-wrap { overflow-x:auto; padding-bottom:4px; }
+  .gl-year-months { display:grid; font-size:9px; color:var(--steel); margin-bottom:3px; height:12px; position:relative; }
+  .gl-year-months span { position:absolute; top:0; }
+  .gl-year-grid { display:grid; grid-auto-flow:column; gap:2.5px; }
+  .gl-year-cell { width:8px; height:8px; border-radius:2px; }
+
+  .gl-legend { display:flex; gap:12px; margin-top:8px; font-size:10px; color:var(--steel); flex-wrap:wrap; }
+  .gl-legend span { display:inline-flex; align-items:center; gap:4px; }
+  .gl-dot { width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  .gl-chart-wrap { overflow-x:auto; margin-top:6px; }
+  .gl-chart-title { font-size:11px; color:var(--steel); margin:10px 0 2px; font-weight:600; }
+
+  .gl-panel { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--iron); border-radius:3px; padding:14px 16px; margin-bottom:12px; }
+  .gl-panel h2 { font-family:'Oswald',sans-serif; font-size:15px; font-weight:500; margin:0 0 8px 0; }
+
+  .gl-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+  .gl-table th { text-align:left; color:var(--steel); font-weight:600; font-size:10px; padding:4px 6px; border-bottom:1px solid var(--line); }
+  .gl-table td { padding:6px; border-bottom:1px solid var(--line); }
+  .gl-table tr:last-child td { border-bottom:none; }
+
+  .gl-empty { color:var(--steel); font-size:12.5px; padding:8px 0; line-height:1.5; }
+  .gl-error { color:var(--iron); font-size:12px; }
+  .gl-loading { color:var(--steel); text-align:center; padding:40px 0; font-size:13px; }
+
+  .gl-navbar {
+    position:sticky; bottom:0; left:0; right:0; display:flex; background:var(--panel);
+    border-top:1px solid var(--line); margin:0 -14px -90px; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
+  }
+  .gl-nav-btn { flex:1; background:none; border:none; color:var(--steel); font-size:10px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px; }
+  .gl-nav-btn.active { color:var(--mat); }
+  .gl-nav-btn svg { width:20px; height:20px; }
+
+  .gl-reset-row { text-align:center; margin-top:6px; }
+  .gl-reset-row button { background:none; border:none; color:var(--steel); font-size:12px; text-decoration:underline; cursor:pointer; }
+</style>
+
+<div id="gymlog-root"><div class="gl-loading" id="gl-loading">Carregant el registre…</div></div>
+
+<script>
+(function() {
+  const root = document.getElementById('gymlog-root');
+  const STORAGE_KEY = 'gymlog-data-v3';
+
+  const CATALOG = {
+    hip_thrust:                { name:'Hip thrust', metric:'weight', unit:'total', start:40, inc:2.5, range:[8,12], cat:'glute' },
+    rdl_manuelles:              { name:'Romanian deadlift amb manuelles', metric:'weight', unit:'per_hand', start:10, inc:1, range:[10,12], cat:'glute' },
+    bulgarian_split_squat:      { name:'Bulgarian split squat', metric:'weight', unit:'per_hand', start:6, inc:1, range:[8,10], cat:'leg' },
+    abduccio_maluc:             { name:'Abducció de maluc a màquina', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
+    extensio_maluc_unilateral:  { name:'Extensió de maluc unilateral', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
+    russian_twist:              { name:'Russian twist', metric:'weight', unit:'total', start:5, inc:1, range:[16,20], cat:'core' },
+    dead_bug:                   { name:'Dead bug', metric:'bodyweight', unit:null, range:[8,10], cat:'core' },
+    press_militar:              { name:'Press militar amb manuelles', metric:'weight', unit:'per_hand', start:4, inc:1, range:[8,10], cat:'push' },
+    rem_manuelles:               { name:'Rem amb manuelles', metric:'weight', unit:'per_hand', start:8, inc:1, range:[10,12], cat:'pull' },
+    push_ups:                   { name:'Push-ups', metric:'bodyweight', unit:null, range:[8,12], cat:'push' },
+    triceps_polea:               { name:'Tríceps a polea', metric:'weight', unit:'total', start:12, inc:2.5, range:[10,12], cat:'push' },
+    face_pull:                   { name:'Face pull a polea', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'pull' },
+    plank:                      { name:'Plank', metric:'time', unit:'s', range:[30,45], cat:'hold' },
+    goblet_squat:                { name:'Goblet squat', metric:'weight', unit:'total', start:14, inc:2.5, range:[10,12], cat:'leg' },
+    step_up:                    { name:'Step-up al banc', metric:'weight', unit:'per_hand', start:6, inc:1, range:[10,10], cat:'leg' },
+    kickback_politja:            { name:'Kickback a politja', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
+    reverse_crunch:              { name:'Reverse crunch', metric:'bodyweight', unit:null, range:[10,15], cat:'core' },
+    side_plank:                  { name:'Side plank', metric:'time', unit:'s', range:[20,40], cat:'hold' }
+  };
+
+  const ROUTINES = [
+    { id:'dia1', short:'Dia 1', name:'Glutis + cames + core', mobility:'90/90 de maluc, hip airplanes, deep squat hold, mobilitat de turmell (5–8 min)',
+      exercises:['hip_thrust','rdl_manuelles','bulgarian_split_squat','abduccio_maluc','extensio_maluc_unilateral','russian_twist','dead_bug'] },
+    { id:'dia2', short:'Dia 2', name:'Tren superior + core', mobility:"Rotacions toràciques, wall slides, rotacions d'espatlla, cat-cow (5–8 min)",
+      exercises:['press_militar','rem_manuelles','push_ups','triceps_polea','face_pull','russian_twist','plank'] },
+    { id:'dia3', short:'Dia 3', name:'Glutis + cames + core (variant)', mobility:'5–8 min de mobilitat de maluc i turmell',
+      exercises:['hip_thrust','goblet_squat','step_up','abduccio_maluc','kickback_politja','reverse_crunch','side_plank'] }
+  ];
+
+  let state = { entries: [], exerciseState: {} };
+  let activeTab = 'exercicis';
+  let chipFilter = 'tots';
+  let expandedId = null;
+  let hmMode = 'mensual';
+  let hmYear, hmMonth;
+  let saveError = false;
+
+  const now = new Date();
+  hmYear = now.getFullYear();
+  hmMonth = now.getMonth();
+  let globalYear = now.getFullYear();
+
+  function todayISO() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('ca-ES', { day:'numeric', month:'short', year:'numeric' });
+  }
+  function unitLabel(cat) {
+    if (cat.metric === 'time') return 's';
+    if (cat.metric === 'bodyweight') return 'reps';
+    return cat.unit === 'per_hand' ? 'kg/mà' : 'kg';
+  }
+  function icon(category) {
+    const c = 'viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
+    switch (category) {
+      case 'glute': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 23 M22 23 L12 33 M22 23 L33 29 M12 33 L9 43 M33 29 L37 39"/></svg>';
+      case 'leg': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 21 M24 21 L16 29 L16 41 M24 21 L32 29 L32 41"/></svg>';
+      case 'pull': return '<svg ' + c + '><circle cx="15" cy="9" r="4"/><path d="M15 13 L15 25 M15 25 L9 37 M15 25 L25 21 L37 25"/></svg>';
+      case 'push': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 25 M24 13 L12 5 M24 13 L36 5 M24 25 L16 39 M24 25 L32 39"/></svg>';
+      case 'core': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 25 M22 25 L12 39 M22 25 L33 33 M16 21 L29 29"/></svg>';
+      case 'hold': return '<svg ' + c + '><circle cx="24" cy="24" r="15"/><path d="M24 24 L24 14 M24 24 L30 28 M19 6 L29 6"/></svg>';
+      default: return '<svg ' + c + '><circle cx="24" cy="24" r="4"/></svg>';
+    }
+  }
+  function paletteColor(i) { return 'hsl(' + ((i * 47) % 360) + ',55%,58%)'; }
+  function colorForCount(count) {
+    if (!count || count <= 0) return 'var(--panel-2)';
+    if (count === 1) return 'rgba(110,143,122,0.45)';
+    if (count === 2) return 'rgba(110,143,122,0.75)';
+    return 'var(--mat)';
+  }
+
+  async function load() {
+    try {
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value) state = JSON.parse(result.value);
+    } catch (e) { /* fresh start */ }
+    render();
+  }
+  async function save() {
+    try {
+      const res = await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+      saveError = !res;
+    } catch (e) { saveError = true; }
+  }
+
+  function metricVal(entry) { return entry.weight != null ? entry.weight : entry.value; }
+
+  function computeTarget(exId) {
+    const st = state.exerciseState[exId];
+    const cat = CATALOG[exId];
+    if (!st) {
+      if (cat.metric === 'weight') return { weight: cat.start, value: cat.range[0] };
+      return { weight: null, value: cat.range ? cat.range[0] : 1 };
+    }
+    return { weight: st.targetWeight, value: st.targetValue };
+  }
+
+  function saveEntry(exId) {
+    const cat = CATALOG[exId];
+    const isWeight = cat.metric === 'weight';
+    let weightVal = null;
+    if (isWeight) {
+      const el = document.getElementById('gl-w-' + exId);
+      weightVal = parseFloat(el.value);
+      if (isNaN(weightVal)) { alert('Posa el pes d\'avui.'); return; }
+    }
+    const vEl = document.getElementById('gl-v-' + exId);
+    const value = parseFloat(vEl.value);
+    if (isNaN(value)) { alert('Posa les repeticions (o segons).'); return; }
+    const date = document.getElementById('gl-d-' + exId).value || todayISO();
+
+    state.entries = state.entries.filter(e => !(e.date === date && e.exerciseId === exId));
+    state.entries.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2,7), date, exerciseId: exId, weight: weightVal, value });
+
+    const st = state.exerciseState[exId] || {};
+    st.lastWeight = weightVal; st.lastValue = value; st.lastDate = date;
+    if (isWeight) {
+      if (st.maxWeight == null || weightVal > st.maxWeight) { st.maxWeight = weightVal; st.maxDate = date; }
+      const hitTop = value >= cat.range[1];
+      st.targetWeight = hitTop ? weightVal + cat.inc : weightVal;
+      st.targetValue = hitTop ? cat.range[0] : Math.min(value + 1, cat.range[1]);
+    } else {
+      if (st.maxWeight == null || value > st.maxWeight) { st.maxWeight = value; st.maxDate = date; }
+      st.targetValue = value + (cat.metric === 'time' ? 5 : 1);
+    }
+    state.exerciseState[exId] = st;
+    save();
+    render();
+  }
+
+  async function resetAll() {
+    if (!confirm('Vols esborrar tot el registre? Aquesta acció no es pot desfer.')) return;
+    state = { entries: [], exerciseState: {} };
+    expandedId = null;
+    await save();
+    render();
+  }
+
+  function lineChart(points, color) {
+    if (points.length === 0) return '<div class="gl-empty">Encara no hi ha prou dades.</div>';
+    const w = 400, h = 110, pad = 26;
+    const vals = points.map(p => p.value);
+    const maxV = Math.max(...vals) * 1.15;
+    const minV = Math.min(0, Math.min(...vals) * 0.9);
+    const stepX = points.length > 1 ? (w - pad * 2) / (points.length - 1) : 0;
+    const scaleY = v => h - pad + 6 - ((v - minV) / ((maxV - minV) || 1)) * (h - pad);
+    const coords = points.map((p, i) => [pad + i * stepX, scaleY(p.value)]);
+    const path = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
+    const dots = coords.map((c, i) => '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="3.5" fill="' + color + '" />').join('');
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block;">' +
+      '<line x1="' + pad + '" y1="' + (h - pad + 6) + '" x2="' + (w - pad) + '" y2="' + (h - pad + 6) + '" stroke="#3A3D42" stroke-width="1" />' +
+      '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2" />' + dots + '</svg>';
+  }
+
+  function multiLineChart(series) {
+    const allPoints = series.flatMap(s => s.points.map(p => ({ ...p, ms: new Date(p.date + 'T00:00:00').getTime() })));
+    if (allPoints.length === 0) return '<div class="gl-empty">Encara no hi ha dades per comparar.</div>';
+    const w = 400, h = 160, pad = 28;
+    const minMs = Math.min(...allPoints.map(p => p.ms)), maxMs = Math.max(...allPoints.map(p => p.ms));
+    const minV = Math.min(60, Math.min(...allPoints.map(p => p.value)) * 0.9);
+    const maxV = Math.max(...allPoints.map(p => p.value)) * 1.08;
+    const xScale = ms => pad + (maxMs > minMs ? (ms - minMs) / (maxMs - minMs) : 0) * (w - pad * 2);
+    const yScale = v => h - pad - ((v - minV) / ((maxV - minV) || 1)) * (h - pad * 1.5);
+    let svgBody = '<line x1="' + pad + '" y1="' + yScale(100) + '" x2="' + (w - pad) + '" y2="' + yScale(100) + '" stroke="#3A3D42" stroke-width="1" stroke-dasharray="3,3" />';
+    series.forEach(s => {
+      const pts = s.points.map(p => [xScale(new Date(p.date + 'T00:00:00').getTime()), yScale(p.value)]);
+      const path = pts.map((c, i) => (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
+      svgBody += '<path d="' + path + '" fill="none" stroke="' + s.color + '" stroke-width="2" />';
+      pts.forEach(c => svgBody += '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="3" fill="' + s.color + '" />');
+    });
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block;">' + svgBody + '</svg>';
+  }
+
+  function dateEntryCounts(filterExId) {
+    const map = {};
+    state.entries.forEach(e => {
+      if (filterExId && e.exerciseId !== filterExId) return;
+      map[e.date] = (map[e.date] || 0) + 1;
+    });
+    return map;
+  }
+
+  function renderWeekHeatmap(counts) {
+    const today = new Date();
+    const dayNr = (today.getDay() + 6) % 7;
+    const monday = new Date(today); monday.setDate(today.getDate() - dayNr);
+    const labels = ['dl','dt','dc','dj','dv','ds','dg'];
+    let cells = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday); d.setDate(monday.getDate() + i);
+      const iso = d.toISOString().slice(0, 10);
+      cells += '<div class="gl-week-cell-wrap"><div class="gl-week-cell" style="background:' + colorForCount(counts[iso]) + '"></div><div class="gl-week-day-label">' + labels[i] + '</div></div>';
+    }
+    return '<div class="gl-week-grid">' + cells + '</div>';
+  }
+
+  function renderMonthHeatmap(counts, year, month) {
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const offset = (first.getDay() + 6) % 7;
+    const today = todayISO();
+    const dows = ['dl','dt','dc','dj','dv','ds','dg'].map(d => '<div class="gl-dow">' + d + '</div>').join('');
+    let cells = '';
+    for (let i = 0; i < offset; i++) cells += '<div class="gl-cell"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const iso = year + '-' + String(month + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const cls = 'gl-cell' + (iso === today ? ' gl-cell-today' : '');
+      cells += '<div class="' + cls + '" style="background:' + colorForCount(counts[iso]) + '"></div>';
+    }
+    const monthLabel = first.toLocaleDateString('ca-ES', { month:'long', year:'numeric' });
+    return '<div class="gl-hm-nav"><button data-hmnav="prevmonth">‹</button><span>' + monthLabel + '</span><button data-hmnav="nextmonth">›</button></div>' +
+      '<div class="gl-month-grid">' + dows + cells + '</div>';
+  }
+
+  function renderYearHeatmap(counts, year) {
+    const jan1 = new Date(year, 0, 1);
+    const firstOffset = (jan1.getDay() + 6) % 7;
+    const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    const totalDays = isLeap ? 366 : 365;
+    const numWeeks = Math.ceil((totalDays + firstOffset) / 7);
+    let cells = '';
+    const monthStarts = [];
+    for (let dayIdx = 0; dayIdx < totalDays; dayIdx++) {
+      const d = new Date(year, 0, 1 + dayIdx);
+      const iso = d.toISOString().slice(0, 10);
+      const week = Math.floor((dayIdx + firstOffset) / 7);
+      const row = (d.getDay() + 6) % 7;
+      if (d.getDate() === 1) monthStarts.push({ week, label: d.toLocaleDateString('ca-ES', { month:'short' }) });
+      cells += '<div class="gl-year-cell" style="grid-column:' + (week+1) + '; grid-row:' + (row+1) + '; background:' + colorForCount(counts[iso]) + '" title="' + iso + '"></div>';
+    }
+    const labels = monthStarts.map(m => '<span style="left:' + (m.week / numWeeks * 100) + '%">' + m.label + '</span>').join('');
+    return '<div class="gl-hm-nav"><button data-hmnav="prevyear">‹</button><span>' + year + '</span><button data-hmnav="nextyear">›</button></div>' +
+      '<div class="gl-year-wrap">' +
+      '<div class="gl-year-months" style="grid-template-columns:repeat(' + numWeeks + ',8px); width:' + (numWeeks * 10.5) + 'px;">' + labels + '</div>' +
+      '<div class="gl-year-grid" style="grid-template-rows:repeat(7,8px); width:' + (numWeeks * 10.5) + 'px;">' + cells + '</div>' +
+      '</div>';
+  }
+
+  function renderHeatmapBlock(filterExId) {
+    const counts = dateEntryCounts(filterExId);
+    let body;
+    if (hmMode === 'setmanal') body = renderWeekHeatmap(counts);
+    else if (hmMode === 'anual') body = renderYearHeatmap(counts, hmYear);
+    else body = renderMonthHeatmap(counts, hmYear, hmMonth);
+    return '<div class="gl-hm-toggle">' +
+      ['setmanal','mensual','anual'].map(m => '<button class="gl-hm-btn ' + (hmMode === m ? 'active' : '') + '" data-hmmode="' + m + '">' + m.charAt(0).toUpperCase() + m.slice(1) + '</button>').join('') +
+      '</div>' + body +
+      '<div class="gl-legend"><span><span class="gl-dot" style="background:var(--panel-2)"></span>Res</span><span><span class="gl-dot" style="background:rgba(110,143,122,0.45)"></span>1</span><span><span class="gl-dot" style="background:rgba(110,143,122,0.75)"></span>2</span><span><span class="gl-dot" style="background:var(--mat)"></span>3+</span></div>';
+  }
+
+  function renderCard(exId) {
+    const cat = CATALOG[exId];
+    const st = state.exerciseState[exId];
+    const target = computeTarget(exId);
+    const isWeight = cat.metric === 'weight';
+    const unit = unitLabel(cat);
+    const anteriorLine = st ? ('Anterior: ' + (isWeight ? st.lastWeight + ' ' + unit + ' · ' : '') + st.lastValue + (isWeight ? ' reps' : ' ' + unit) + ' (' + fmtDate(st.lastDate) + ')')
+      : 'Anterior: —';
+    const maxLine = st && st.maxWeight != null ? ('Màxim: ' + st.maxWeight + (isWeight ? ' ' + unit : ' ' + unit) + ' (' + fmtDate(st.maxDate) + ')') : 'Màxim: —';
+    const targetLine = isWeight
+      ? (target.weight != null ? ('A superar: <b>' + target.weight + ' ' + unit + ' / ' + target.value + ' reps</b>') : 'Introdueix el pes inicial')
+      : ('A superar: <b>' + target.value + ' ' + unit + '</b>');
+
+    const isOpen = expandedId === exId;
+    let detailHtml = '';
+    if (isOpen) {
+      const today = todayISO();
+      const wFieldHtml = isWeight ? '<div class="gl-field"><label>Pes (' + unit + ')</label><input type="number" step="0.5" id="gl-w-' + exId + '" value="' + (target.weight != null ? target.weight : '') + '" placeholder="p.ex. 42.5" /></div>' : '';
+      const vFieldHtml = '<div class="gl-field"><label>' + (cat.metric === 'time' ? 'Segons' : 'Repeticions') + '</label><input type="number" step="1" id="gl-v-' + exId + '" placeholder="' + target.value + '" /></div>';
+      const weightHistory = state.entries.filter(e => e.exerciseId === exId && e.weight != null).sort((a,b) => a.date.localeCompare(b.date)).map(e => ({ value: e.weight }));
+      const valueHistory = state.entries.filter(e => e.exerciseId === exId).sort((a,b) => a.date.localeCompare(b.date)).map(e => ({ value: e.value }));
+      detailHtml =
+        '<div class="gl-detail">' +
+          '<div class="gl-detail-banner">' + targetLine + '</div>' +
+          '<div class="gl-row"><div class="gl-field"><label>Data</label><input type="date" id="gl-d-' + exId + '" value="' + today + '" /></div>' + wFieldHtml + vFieldHtml + '</div>' +
+          '<button class="gl-btn gl-btn-mat" data-save="' + exId + '">Registrar sessió</button>' +
+          (isWeight ? '<div class="gl-chart-title">Pes (kg)</div><div class="gl-chart-wrap">' + lineChart(weightHistory, '#6E8F7C') + '</div>' : '') +
+          '<div class="gl-chart-title">' + (cat.metric === 'time' ? 'Segons' : 'Repeticions') + '</div><div class="gl-chart-wrap">' + lineChart(valueHistory, '#C4402F') + '</div>' +
+          '<div class="gl-chart-title">Constància</div>' + renderHeatmapBlock(exId) +
+        '</div>';
+    }
+
+    return '<div class="gl-card">' +
+      '<div class="gl-card-head" data-toggle="' + exId + '">' +
+        '<div class="gl-icon">' + icon(cat.cat) + '</div>' +
+        '<div class="gl-card-info">' +
+          '<div class="gl-card-name">' + cat.name + '</div>' +
+          '<div class="gl-card-line">' + anteriorLine + '</div>' +
+          '<div class="gl-card-line">' + maxLine + '</div>' +
+          '<div class="gl-card-target">' + targetLine + '</div>' +
+        '</div>' +
+        '<div class="gl-chevron ' + (isOpen ? 'open' : '') + '">›</div>' +
+      '</div>' + detailHtml +
+      '</div>';
+  }
+
+  function renderExercicisTab() {
+    let ids;
+    if (chipFilter === 'tots') ids = Object.keys(CATALOG);
+    else ids = [...new Set(ROUTINES.find(r => r.id === chipFilter).exercises)];
+    const routine = ROUTINES.find(r => r.id === chipFilter);
+    const chips = '<div class="gl-chips">' +
+      '<button class="gl-chip ' + (chipFilter === 'tots' ? 'active' : '') + '" data-chip="tots">Tots</button>' +
+      ROUTINES.map(r => '<button class="gl-chip ' + (chipFilter === r.id ? 'active' : '') + '" data-chip="' + r.id + '">' + r.short + '</button>').join('') +
+      '</div>';
+    const hint = routine ? '<div class="gl-mobility-hint">🧘 ' + routine.mobility + '</div>' : '';
+    return chips + hint + ids.map(renderCard).join('');
+  }
+
+  function renderProgresGlobalTab() {
+    const ids = Object.keys(CATALOG).filter(id => state.entries.some(e => e.exerciseId === id));
+    if (ids.length === 0) return '<div class="gl-panel"><h2>Progrés global</h2><div class="gl-empty">Encara no has registrat cap sessió.</div></div>';
+    const series = ids.map((id, i) => {
+      const pts = state.entries.filter(e => e.exerciseId === id).sort((a,b) => a.date.localeCompare(b.date)).map(e => ({ date: e.date, raw: metricVal(e) }));
+      if (pts.length < 2) return null;
+      const base = pts[0].raw;
+      return { id, label: CATALOG[id].name, color: paletteColor(i), points: pts.map(p => ({ date: p.date, value: (p.raw / base) * 100 })) };
+    }).filter(Boolean);
+
+    const legend = series.map(s => '<span><span class="gl-dot" style="background:' + s.color + '"></span>' + s.label + '</span>').join('');
+    const tableRows = ids.map(id => {
+      const st = state.exerciseState[id]; const cat = CATALOG[id]; const unit = unitLabel(cat);
+      const anterior = st ? ((cat.metric === 'weight' ? st.lastWeight + unit.replace('kg','kg').slice(0,0) + ' ' + unit + ' / ' : '') + st.lastValue + (cat.metric === 'weight' ? ' reps' : ' ' + unit)) : '—';
+      const maxim = st && st.maxWeight != null ? st.maxWeight + (cat.metric === 'weight' ? ' ' + unit : ' ' + unit) : '—';
+      return '<tr><td>' + cat.name + '</td><td>' + anterior + '</td><td>' + maxim + '</td></tr>';
+    }).join('');
+
+    return '<div class="gl-panel"><h2>Progrés (% respecte 1a sessió)</h2>' +
+      (series.length > 0 ? '<div class="gl-chart-wrap">' + multiLineChart(series) + '</div><div class="gl-legend">' + legend + '</div>' : '<div class="gl-empty">Registra un exercici almenys 2 vegades per veure la seva línia.</div>') +
+      '</div>' +
+      '<div class="gl-panel"><h2>Resum</h2><table class="gl-table"><tr><th>Exercici</th><th>Anterior</th><th>Màxim</th></tr>' + tableRows + '</table></div>';
+  }
+
+  function renderHeatmapAnualTab() {
+    const savedMode = hmMode;
+    hmMode = 'anual';
+    const counts = dateEntryCounts(null);
+    const body = '<div class="gl-panel"><h2>Heatmap anual (tots els exercicis)</h2>' + renderYearHeatmap(counts, globalYear) +
+      '<div class="gl-legend"><span><span class="gl-dot" style="background:var(--panel-2)"></span>Res</span><span><span class="gl-dot" style="background:rgba(110,143,122,0.45)"></span>1 exercici</span><span><span class="gl-dot" style="background:rgba(110,143,122,0.75)"></span>2 exercicis</span><span><span class="gl-dot" style="background:var(--mat)"></span>3+ exercicis</span></div></div>';
+    hmMode = savedMode;
+    return body;
+  }
+
+  function renderConfigTab() {
+    return '<div class="gl-panel"><h2>Configuració</h2>' +
+      '<p class="gl-empty">El registre es desa automàticament. Si vols començar de zero:</p>' +
+      '<div class="gl-reset-row"><button id="gl-reset-btn">Esborrar tot el registre</button></div>' +
+      (saveError ? '<p class="gl-error">No s\'ha pogut desar l\'últim canvi. Torna-ho a provar.</p>' : '') +
+      '</div>';
+  }
+
+  function navIcon(name) {
+    switch (name) {
+      case 'exercicis': return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="4" height="6"/><rect x="17" y="9" width="4" height="6"/><line x1="7" y1="12" x2="17" y2="12"/></svg>';
+      case 'progres': return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-6 4 3 6-8" /></svg>';
+      case 'heatmap': return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="10" y="3" width="6" height="6" rx="1"/><rect x="17" y="3" width="4" height="6" rx="1"/><rect x="3" y="10" width="6" height="6" rx="1"/><rect x="10" y="10" width="6" height="6" rx="1"/></svg>';
+      case 'config': return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.14-1.4l2-1.5-2-3.4-2.3.9a7 7 0 00-2.4-1.4L14 3h-4l-.2 2.2a7 7 0 00-2.4 1.4l-2.3-.9-2 3.4 2 1.5A7 7 0 005 12"/></svg>';
+    }
+  }
+
+  function render() {
+    let body;
+    if (activeTab === 'exercicis') body = renderExercicisTab();
+    else if (activeTab === 'progres') body = renderProgresGlobalTab();
+    else if (activeTab === 'heatmap') body = renderHeatmapAnualTab();
+    else body = renderConfigTab();
+
+    root.innerHTML =
+      '<div class="gl-header"><div><p class="gl-title">REGISTRE</p><p class="gl-sub">Pesos, progrés i constància</p></div></div>' +
+      body +
+      '<div class="gl-navbar">' +
+        ['exercicis','progres','heatmap','config'].map(t => {
+          const labels = { exercicis:'Exercicis', progres:'Progrés Global', heatmap:'Heatmap Anual', config:'Configuració' };
+          return '<button class="gl-nav-btn ' + (activeTab === t ? 'active' : '') + '" data-tab="' + t + '">' + navIcon(t) + '<span>' + labels[t] + '</span></button>';
+        }).join('') +
+      '</div>';
+
+    root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { activeTab = b.dataset.tab; render(); }));
+    root.querySelectorAll('[data-chip]').forEach(b => b.addEventListener('click', () => { chipFilter = b.dataset.chip; render(); }));
+    root.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', () => {
+      const id = b.dataset.toggle;
+      expandedId = expandedId === id ? null : id;
+      hmMode = 'mensual'; hmYear = now.getFullYear(); hmMonth = now.getMonth();
+      render();
+    }));
+    root.querySelectorAll('[data-save]').forEach(b => b.addEventListener('click', () => saveEntry(b.dataset.save)));
+    root.querySelectorAll('[data-hmmode]').forEach(b => b.addEventListener('click', () => { hmMode = b.dataset.hmmode; render(); }));
+    root.querySelectorAll('[data-hmnav]').forEach(b => b.addEventListener('click', () => {
+      const action = b.dataset.hmnav;
+      if (action === 'prevmonth') { hmMonth--; if (hmMonth < 0) { hmMonth = 11; hmYear--; } }
+      if (action === 'nextmonth') { hmMonth++; if (hmMonth > 11) { hmMonth = 0; hmYear++; } }
+      if (action === 'prevyear') { if (activeTab === 'heatmap') globalYear--; else hmYear--; }
+      if (action === 'nextyear') { if (activeTab === 'heatmap') globalYear++; else hmYear++; }
+      render();
+    }));
+    const resetBtn = root.querySelector('#gl-reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetAll);
+  }
+
+  load();
+})();
+</script>
