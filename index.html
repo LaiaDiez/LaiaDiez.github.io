@@ -182,18 +182,19 @@
     if (cat.metric === 'bodyweight') return 'reps';
     return cat.unit === 'per_hand' ? 'kg/mà' : 'kg';
   }
- function icon(category) {
-  const style = 'style="width:26px; height:26px; object-fit:contain;"';
+function icon(category) {
+  const c = 'viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
   switch (category) {
-    case 'glute': return '<img src="URL_GLUTE.png" alt="Gluti" ' + style + ' />';
-    case 'leg':   return '<img src="URL_LEG.png" alt="Cama" ' + style + ' />';
-    case 'pull':  return '<img src="URL_PULL.png" alt="Tracció" ' + style + ' />';
-    case 'push':  return '<img src="URL_PUSH.png" alt="Empenta" ' + style + ' />';
-    case 'core':  return '<img src="URL_CORE.png" alt="Core" ' + style + ' />';
-    case 'hold':  return '<img src="URL_HOLD.png" alt="Estàtic" ' + style + ' />';
-    default:      return '<img src="URL_DEFAULT.png" alt="Icona" ' + style + ' />';
+    case 'glute': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 23 M22 23 L12 33 M22 23 L33 29 M12 33 L9 43 M33 29 L37 39"/></svg>';
+    case 'leg': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 21 M24 21 L16 29 L16 41 M24 21 L32 29 L32 41"/></svg>';
+    case 'pull': return '<svg ' + c + '><circle cx="15" cy="9" r="4"/><path d="M15 13 L15 25 M15 25 L9 37 M15 25 L25 21 L37 25"/></svg>';
+    case 'push': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 25 M24 13 L12 5 M24 13 L36 5 M24 25 L16 39 M24 25 L32 39"/></svg>';
+    case 'core': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 25 M22 25 L12 39 M22 25 L33 33 M16 21 L29 29"/></svg>';
+    case 'hold': return '<svg ' + c + '><circle cx="24" cy="24" r="15"/><path d="M24 24 L24 14 M24 24 L30 28 M19 6 L29 6"/></svg>';
+    default: return '<svg ' + c + '><circle cx="24" cy="24" r="4"/></svg>';
   }
 }
+
   function paletteColor(i) { return 'hsl(' + ((i * 47) % 360) + ',55%,58%)'; }
   function colorForCount(count) {
     if (!count || count <= 0) return 'var(--panel-2)';
