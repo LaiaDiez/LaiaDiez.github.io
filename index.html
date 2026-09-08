@@ -193,8 +193,7 @@
     case 'hold': return '<svg ' + c + '><circle cx="24" cy="24" r="15"/><path d="M24 24 L24 14 M24 24 L30 28 M19 6 L29 6"/></svg>';
     default: return '<svg ' + c + '><circle cx="24" cy="24" r="4"/></svg>';
   }
-}
-  }
+ }
   function paletteColor(i) { return 'hsl(' + ((i * 47) % 360) + ',55%,58%)'; }
   function colorForCount(count) {
     if (!count || count <= 0) return 'var(--panel-2)';
