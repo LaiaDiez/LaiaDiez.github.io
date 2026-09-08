@@ -182,36 +182,16 @@
     if (cat.metric === 'bodyweight') return 'reps';
     return cat.unit === 'per_hand' ? 'kg/mà' : 'kg';
   }
-  function icon(category) {
-  const style = 'style="width:28px; height:28px; object-fit:contain; border-radius:4px;"';
-  
+ function icon(category) {
+  const style = 'style="width:26px; height:26px; object-fit:contain;"';
   switch (category) {
-    case 'glute':
-      // Hip thrust, RDL, Abducció, Extensió de maluc, Kickback
-      return '<img src="URL_DIRECTA_HIP_THRUST_O_GLUTE.jpg" alt="Gluti" ' + style + ' />';
-
-    case 'leg':
-      // Bulgarian split squat, Goblet squat, Step-up
-      return '<img src="URL_DIRECTA_BULGARIAN.jpg" alt="Cama" ' + style + ' />';
-
-    case 'core':
-      // Russian twist, Dead bug, Reverse crunch
-      return '<img src="URL_DIRECTA_RUSSIAN_O_DEADBUG.jpg" alt="Core" ' + style + ' />';
-
-    case 'push':
-      // Press militar, Push-ups, Tríceps
-      return '<img src="URL_DIRECTA_PRESS_MILITAR.jpg" alt="Empenta" ' + style + ' />';
-
-    case 'pull':
-      // Rem, Face pull
-      return '<svg viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="9" r="4"/><path d="M15 13 L15 25 M15 25 L9 37 M15 25 L25 21 L37 25"/></svg>';
-
-    case 'hold':
-      // Plank, Side plank
-      return '<svg viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="15"/><path d="M24 24 L24 14 M24 24 L30 28 M19 6 L29 6"/></svg>';
-
-    default:
-      return '<svg viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="4"/></svg>';
+    case 'glute': return '<img src="URL_GLUTE.png" alt="Gluti" ' + style + ' />';
+    case 'leg':   return '<img src="URL_LEG.png" alt="Cama" ' + style + ' />';
+    case 'pull':  return '<img src="URL_PULL.png" alt="Tracció" ' + style + ' />';
+    case 'push':  return '<img src="URL_PUSH.png" alt="Empenta" ' + style + ' />';
+    case 'core':  return '<img src="URL_CORE.png" alt="Core" ' + style + ' />';
+    case 'hold':  return '<img src="URL_HOLD.png" alt="Estàtic" ' + style + ' />';
+    default:      return '<img src="URL_DEFAULT.png" alt="Icona" ' + style + ' />';
   }
 }
   }
