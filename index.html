@@ -1,123 +1,148 @@
-<!-- Registre de gimnàs: llistat d'exercicis amb "anterior/màxim/a superar", heatmap setmanal/mensual/anual i progrés global -->
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Registre de Gimnàs</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap');
 
-  #gymlog-root {
-    --bg: #1E2023;
-    --panel: #26292E;
-    --panel-2: #2C3036;
-    --line: #3A3D42;
-    --chalk: #EDE9E1;
-    --steel: #9A9D9F;
-    --iron: #C4402F;
-    --iron-dim: #7A2A21;
-    --mat: #6E8F7C;
-    --mat-dim: #3E5548;
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--chalk);
-    max-width: 460px;
-    margin: 0 auto;
-    padding: 18px 14px 90px;
-    min-height: 100vh;
-    box-sizing: border-box;
-    position: relative;
-  }
-  #gymlog-root * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #1E2023;
+      width: 100%;
+      height: 100%;
+    }
 
-  .gl-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; padding-bottom:12px; border-bottom:3px solid var(--iron); }
-  .gl-title { font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.5px; margin:0; }
-  .gl-sub { color:var(--steel); font-size:11px; margin:0; }
+    #gymlog-root {
+      --bg: #1E2023;
+      --panel: #26292E;
+      --panel-2: #2C3036;
+      --line: #3A3D42;
+      --chalk: #EDE9E1;
+      --steel: #9A9D9F;
+      --iron: #C4402F;
+      --iron-dim: #7A2A21;
+      --mat: #6E8F7C;
+      --mat-dim: #3E5548;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--chalk);
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 16px 12px 90px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      position: relative;
+    }
+    #gymlog-root * { box-sizing: border-box; }
 
-  .gl-chips { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; }
-  .gl-chip { flex-shrink:0; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px 12px; font-size:12px; font-weight:600; border-radius:14px; cursor:pointer; }
-  .gl-chip.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
-  .gl-mobility-hint { color:var(--steel); font-size:11px; margin:-4px 0 10px 0; line-height:1.4; }
+    .gl-header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; padding-bottom:12px; border-bottom:3px solid var(--iron); }
+    .gl-title { font-family:'Oswald',sans-serif; font-weight:700; font-size:24px; letter-spacing:.5px; margin:0; }
+    .gl-sub { color:var(--steel); font-size:11px; margin:0; }
 
-  .gl-card { background:var(--panel); border:1px solid var(--line); border-radius:6px; margin-bottom:10px; overflow:hidden; }
-  .gl-card-head { display:flex; align-items:center; gap:12px; padding:12px; cursor:pointer; }
-  .gl-icon { flex-shrink:0; width:48px; height:48px; border-radius:6px; background:var(--panel-2); overflow:hidden; display:flex; align-items:center; justify-content:center; }
-  .gl-icon img { width:100%; height:100%; object-fit:cover; }
-  .gl-card-info { flex:1; min-width:0; }
-  .gl-card-name { font-weight:600; font-size:13.5px; margin-bottom:3px; }
-  .gl-card-line { color:var(--steel); font-size:11px; line-height:1.5; }
-  .gl-card-target { color:var(--chalk); font-size:11.5px; font-weight:700; margin-top:2px; }
-  .gl-card-target b { color:var(--mat); }
-  .gl-chevron { color:var(--steel); font-size:18px; flex-shrink:0; transition:transform .15s; }
-  .gl-chevron.open { transform:rotate(90deg); }
+    .gl-chips { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; }
+    .gl-chip { flex-shrink:0; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px 12px; font-size:12px; font-weight:600; border-radius:14px; cursor:pointer; }
+    .gl-chip.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
+    .gl-mobility-hint { color:var(--steel); font-size:11px; margin:-4px 0 10px 0; line-height:1.4; }
 
-  .gl-detail { padding:0 14px 16px; border-top:1px solid var(--line); }
-  .gl-detail-banner { background:var(--panel-2); border-left:3px solid var(--mat); padding:8px 10px; margin:12px 0; border-radius:3px; font-size:12.5px; }
-  .gl-detail-banner b { color:var(--mat); }
+    .gl-card { background:var(--panel); border:1px solid var(--line); border-radius:6px; margin-bottom:10px; overflow:hidden; }
+    .gl-card-head { display:flex; align-items:center; gap:12px; padding:12px; cursor:pointer; }
+    .gl-icon { flex-shrink:0; width:48px; height:48px; border-radius:6px; background:var(--panel-2); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .gl-icon img { width:100%; height:100%; object-fit:cover; }
+    .gl-card-info { flex:1; min-width:0; }
+    .gl-card-name { font-weight:600; font-size:13.5px; margin-bottom:3px; }
+    .gl-card-line { color:var(--steel); font-size:11px; line-height:1.5; }
+    .gl-card-target { color:var(--chalk); font-size:11.5px; font-weight:700; margin-top:2px; }
+    .gl-card-target b { color:var(--mat); }
+    .gl-chevron { color:var(--steel); font-size:18px; flex-shrink:0; transition:transform .15s; }
+    .gl-chevron.open { transform:rotate(90deg); }
 
-  .gl-row { display:flex; gap:8px; margin-bottom:10px; }
-  .gl-field { flex:1; display:flex; flex-direction:column; gap:4px; }
-  .gl-field label { font-size:10px; color:var(--steel); }
-  .gl-field input, .gl-field select {
-    background:var(--panel-2); border:1px solid var(--line); color:var(--chalk);
-    padding:8px; border-radius:3px; font-size:14px; font-family:'Inter',sans-serif; width:100%;
-  }
-  .gl-field input:focus, .gl-field select:focus { outline:2px solid var(--iron); outline-offset:1px; }
+    .gl-detail { padding:0 14px 16px; border-top:1px solid var(--line); }
+    .gl-detail-banner { background:var(--panel-2); border-left:3px solid var(--mat); padding:8px 10px; margin:12px 0; border-radius:3px; font-size:12.5px; }
+    .gl-detail-banner b { color:var(--mat); }
 
-  .gl-btn { background:var(--iron); color:#fff; border:none; padding:9px 14px; font-weight:600; font-size:13px; border-radius:3px; cursor:pointer; width:100%; }
-  .gl-btn:hover { background:var(--iron-dim); }
-  .gl-btn-mat { background:var(--mat-dim); }
-  .gl-btn-mat:hover { background:var(--mat); }
+    .gl-row { display:flex; gap:8px; margin-bottom:10px; }
+    .gl-field { flex:1; display:flex; flex-direction:column; gap:4px; }
+    .gl-field label { font-size:10px; color:var(--steel); }
+    .gl-field input, .gl-field select {
+      background:var(--panel-2); border:1px solid var(--line); color:var(--chalk);
+      padding:8px; border-radius:3px; font-size:14px; font-family:'Inter',sans-serif; width:100%;
+    }
+    .gl-field input:focus, .gl-field select:focus { outline:2px solid var(--iron); outline-offset:1px; }
 
-  .gl-hm-toggle { display:flex; gap:6px; margin:14px 0 8px; }
-  .gl-hm-btn { flex:1; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px; font-size:11px; font-weight:600; border-radius:3px; cursor:pointer; }
-  .gl-hm-btn.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
+    .gl-btn { background:var(--iron); color:#fff; border:none; padding:9px 14px; font-weight:600; font-size:13px; border-radius:3px; cursor:pointer; width:100%; }
+    .gl-btn:hover { background:var(--iron-dim); }
+    .gl-btn-mat { background:var(--mat-dim); }
+    .gl-btn-mat:hover { background:var(--mat); }
 
-  .gl-hm-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-  .gl-hm-nav button { background:none; border:1px solid var(--line); color:var(--chalk); border-radius:3px; padding:2px 9px; cursor:pointer; }
-  .gl-hm-nav span { font-size:12px; color:var(--steel); text-transform:capitalize; }
+    .gl-hm-toggle { display:flex; gap:6px; margin:14px 0 8px; }
+    .gl-hm-btn { flex:1; background:var(--panel-2); color:var(--steel); border:1px solid var(--line); padding:6px; font-size:11px; font-weight:600; border-radius:3px; cursor:pointer; }
+    .gl-hm-btn.active { color:#fff; background:var(--mat-dim); border-color:var(--mat); }
 
-  .gl-week-grid { display:flex; gap:4px; }
-  .gl-week-cell-wrap { flex:1; text-align:center; }
-  .gl-week-cell { width:100%; aspect-ratio:1; border-radius:3px; margin-bottom:3px; }
-  .gl-week-day-label { font-size:9px; color:var(--steel); }
+    .gl-hm-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .gl-hm-nav button { background:none; border:1px solid var(--line); color:var(--chalk); border-radius:3px; padding:2px 9px; cursor:pointer; }
+    .gl-hm-nav span { font-size:12px; color:var(--steel); text-transform:capitalize; }
 
-  .gl-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-  .gl-dow { color:var(--steel); font-size:9px; text-align:center; padding-bottom:2px; }
-  .gl-cell { aspect-ratio:1; border-radius:3px; }
-  .gl-cell-today { outline:2px solid var(--chalk); outline-offset:-2px; }
+    .gl-week-grid { display:flex; gap:4px; }
+    .gl-week-cell-wrap { flex:1; text-align:center; }
+    .gl-week-cell { width:100%; aspect-ratio:1; border-radius:3px; margin-bottom:3px; }
+    .gl-week-day-label { font-size:9px; color:var(--steel); }
 
-  .gl-year-wrap { overflow-x:auto; padding-bottom:4px; }
-  .gl-year-months { display:grid; font-size:9px; color:var(--steel); margin-bottom:3px; height:12px; position:relative; }
-  .gl-year-months span { position:absolute; top:0; }
-  .gl-year-grid { display:grid; grid-auto-flow:column; gap:2.5px; }
-  .gl-year-cell { width:8px; height:8px; border-radius:2px; }
+    .gl-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .gl-dow { color:var(--steel); font-size:9px; text-align:center; padding-bottom:2px; }
+    .gl-cell { aspect-ratio:1; border-radius:3px; }
+    .gl-cell-today { outline:2px solid var(--chalk); outline-offset:-2px; }
 
-  .gl-legend { display:flex; gap:12px; margin-top:8px; font-size:10px; color:var(--steel); flex-wrap:wrap; }
-  .gl-legend span { display:inline-flex; align-items:center; gap:4px; }
-  .gl-dot { width:9px; height:9px; border-radius:2px; display:inline-block; }
+    .gl-year-wrap { overflow-x:auto; padding-bottom:4px; }
+    .gl-year-months { display:grid; font-size:9px; color:var(--steel); margin-bottom:3px; height:12px; position:relative; }
+    .gl-year-months span { position:absolute; top:0; }
+    .gl-year-grid { display:grid; grid-auto-flow:column; gap:2.5px; }
+    .gl-year-cell { width:8px; height:8px; border-radius:2px; }
 
-  .gl-chart-wrap { overflow-x:auto; margin-top:6px; }
-  .gl-chart-title { font-size:11px; color:var(--steel); margin:10px 0 2px; font-weight:600; }
+    .gl-legend { display:flex; gap:12px; margin-top:8px; font-size:10px; color:var(--steel); flex-wrap:wrap; }
+    .gl-legend span { display:inline-flex; align-items:center; gap:4px; }
+    .gl-dot { width:9px; height:9px; border-radius:2px; display:inline-block; }
 
-  .gl-panel { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--iron); border-radius:3px; padding:14px 16px; margin-bottom:12px; }
-  .gl-panel h2 { font-family:'Oswald',sans-serif; font-size:15px; font-weight:500; margin:0 0 8px 0; }
+    .gl-chart-wrap { overflow-x:auto; margin-top:6px; }
+    .gl-chart-title { font-size:11px; color:var(--steel); margin:10px 0 2px; font-weight:600; }
 
-  .gl-table { width:100%; border-collapse:collapse; font-size:11.5px; }
-  .gl-table th { text-align:left; color:var(--steel); font-weight:600; font-size:10px; padding:4px 6px; border-bottom:1px solid var(--line); }
-  .gl-table td { padding:6px; border-bottom:1px solid var(--line); }
-  .gl-table tr:last-child td { border-bottom:none; }
+    .gl-panel { background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--iron); border-radius:3px; padding:14px 16px; margin-bottom:12px; }
+    .gl-panel h2 { font-family:'Oswald',sans-serif; font-size:15px; font-weight:500; margin:0 0 8px 0; }
 
-  .gl-empty { color:var(--steel); font-size:12.5px; padding:8px 0; line-height:1.5; }
-  .gl-error { color:var(--iron); font-size:12px; }
-  .gl-loading { color:var(--steel); text-align:center; padding:40px 0; font-size:13px; }
+    .gl-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .gl-table th { text-align:left; color:var(--steel); font-weight:600; font-size:10px; padding:4px 6px; border-bottom:1px solid var(--line); }
+    .gl-table td { padding:6px; border-bottom:1px solid var(--line); }
+    .gl-table tr:last-child td { border-bottom:none; }
 
-  .gl-navbar {
-    position:sticky; bottom:0; left:0; right:0; display:flex; background:var(--panel);
-    border-top:1px solid var(--line); margin:0 -14px -90px; padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));
-  }
-  .gl-nav-btn { flex:1; background:none; border:none; color:var(--steel); font-size:10px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px; }
-  .gl-nav-btn.active { color:var(--mat); }
-  .gl-nav-btn svg { width:20px; height:20px; }
+    .gl-empty { color:var(--steel); font-size:12.5px; padding:8px 0; line-height:1.5; }
+    .gl-error { color:var(--iron); font-size:12px; }
+    .gl-loading { color:var(--steel); text-align:center; padding:40px 0; font-size:13px; }
 
-  .gl-reset-row { text-align:center; margin-top:6px; }
-  .gl-reset-row button { background:none; border:none; color:var(--steel); font-size:12px; text-decoration:underline; cursor:pointer; }
-</style>
+    .gl-navbar {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: calc(100% + 24px);
+      display: flex;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+      margin: 0 -12px -90px;
+      padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px));
+      z-index: 10;
+    }
+    .gl-nav-btn { flex:1; background:none; border:none; color:var(--steel); font-size:10px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px; }
+    .gl-nav-btn.active { color:var(--mat); }
+    .gl-nav-btn svg { width:20px; height:20px; }
+
+    .gl-reset-row { text-align:center; margin-top:6px; }
+    .gl-reset-row button { background:none; border:none; color:var(--steel); font-size:12px; text-decoration:underline; cursor:pointer; }
+  </style>
+</head>
+<body>
 
 <div id="gymlog-root"><div class="gl-loading" id="gl-loading">Carregant el registre…</div></div>
 
@@ -126,7 +151,6 @@
   const root = document.getElementById('gymlog-root');
   const STORAGE_KEY = 'gymlog-data-v3';
 
-  // S'ha afegit la ruta de la imatge segons els fitxers de la carpeta
   const CATALOG = {
     hip_thrust:                 { name:'Hip thrust', metric:'weight', unit:'total', start:40, inc:2.5, range:[8,12], cat:'glute', img:'./Nueva carpeta/hip-thrust.jpg' },
     rdl_manuelles:              { name:'Romanian deadlift amb manuelles', metric:'weight', unit:'per_hand', start:10, inc:1, range:[10,12], cat:'glute', img:'./Nueva carpeta/romanian-deadlift.jpg' },
@@ -556,3 +580,5 @@
   load();
 })();
 </script>
+</body>
+</html>
