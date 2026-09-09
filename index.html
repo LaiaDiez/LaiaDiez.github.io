@@ -36,7 +36,8 @@
 
   .gl-card { background:var(--panel); border:1px solid var(--line); border-radius:6px; margin-bottom:10px; overflow:hidden; }
   .gl-card-head { display:flex; align-items:center; gap:12px; padding:12px; cursor:pointer; }
-  .gl-icon { flex-shrink:0; width:44px; height:44px; border-radius:6px; background:var(--panel-2); display:flex; align-items:center; justify-content:center; color:var(--mat); }
+  .gl-icon { flex-shrink:0; width:48px; height:48px; border-radius:6px; background:var(--panel-2); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .gl-icon img { width:100%; height:100%; object-fit:cover; }
   .gl-card-info { flex:1; min-width:0; }
   .gl-card-name { font-weight:600; font-size:13.5px; margin-bottom:3px; }
   .gl-card-line { color:var(--steel); font-size:11px; line-height:1.5; }
@@ -125,25 +126,26 @@
   const root = document.getElementById('gymlog-root');
   const STORAGE_KEY = 'gymlog-data-v3';
 
+  // S'ha afegit la ruta de la imatge segons els fitxers de la carpeta
   const CATALOG = {
-    hip_thrust:                { name:'Hip thrust', metric:'weight', unit:'total', start:40, inc:2.5, range:[8,12], cat:'glute' },
-    rdl_manuelles:              { name:'Romanian deadlift amb manuelles', metric:'weight', unit:'per_hand', start:10, inc:1, range:[10,12], cat:'glute' },
-    bulgarian_split_squat:      { name:'Bulgarian split squat', metric:'weight', unit:'per_hand', start:6, inc:1, range:[8,10], cat:'leg' },
-    abduccio_maluc:             { name:'Abducció de maluc a màquina', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
-    extensio_maluc_unilateral:  { name:'Extensió de maluc unilateral', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
-    russian_twist:              { name:'Russian twist', metric:'weight', unit:'total', start:5, inc:1, range:[16,20], cat:'core' },
-    dead_bug:                   { name:'Dead bug', metric:'bodyweight', unit:null, range:[8,10], cat:'core' },
-    press_militar:              { name:'Press militar amb manuelles', metric:'weight', unit:'per_hand', start:4, inc:1, range:[8,10], cat:'push' },
-    rem_manuelles:               { name:'Rem amb manuelles', metric:'weight', unit:'per_hand', start:8, inc:1, range:[10,12], cat:'pull' },
-    push_ups:                   { name:'Push-ups', metric:'bodyweight', unit:null, range:[8,12], cat:'push' },
-    triceps_polea:               { name:'Tríceps a polea', metric:'weight', unit:'total', start:12, inc:2.5, range:[10,12], cat:'push' },
-    face_pull:                   { name:'Face pull a polea', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'pull' },
-    plank:                      { name:'Plank', metric:'time', unit:'s', range:[30,45], cat:'hold' },
-    goblet_squat:                { name:'Goblet squat', metric:'weight', unit:'total', start:14, inc:2.5, range:[10,12], cat:'leg' },
-    step_up:                    { name:'Step-up al banc', metric:'weight', unit:'per_hand', start:6, inc:1, range:[10,10], cat:'leg' },
-    kickback_politja:            { name:'Kickback a politja', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute' },
-    reverse_crunch:              { name:'Reverse crunch', metric:'bodyweight', unit:null, range:[10,15], cat:'core' },
-    side_plank:                  { name:'Side plank', metric:'time', unit:'s', range:[20,40], cat:'hold' }
+    hip_thrust:                 { name:'Hip thrust', metric:'weight', unit:'total', start:40, inc:2.5, range:[8,12], cat:'glute', img:'./Nueva carpeta/hip-thrust.jpg' },
+    rdl_manuelles:              { name:'Romanian deadlift amb manuelles', metric:'weight', unit:'per_hand', start:10, inc:1, range:[10,12], cat:'glute', img:'./Nueva carpeta/romanian-deadlift.jpg' },
+    bulgarian_split_squat:      { name:'Bulgarian split squat', metric:'weight', unit:'per_hand', start:6, inc:1, range:[8,10], cat:'leg', img:'./Nueva carpeta/bulgarian.jpg' },
+    abduccio_maluc:             { name:'Abducció de maluc a màquina', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute', img:'./Nueva carpeta/abduccion.jpg' },
+    extensio_maluc_unilateral:  { name:'Extensió de maluc unilateral', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute', img:'./Nueva carpeta/extension.jpg' },
+    russian_twist:              { name:'Russian twist', metric:'weight', unit:'total', start:5, inc:1, range:[16,20], cat:'core', img:'./Nueva carpeta/rusian twist.jpg' },
+    dead_bug:                   { name:'Dead bug', metric:'bodyweight', unit:null, range:[8,10], cat:'core', img:'./Nueva carpeta/deadbug.jpg' },
+    press_militar:              { name:'Press militar amb manuelles', metric:'weight', unit:'per_hand', start:4, inc:1, range:[8,10], cat:'push', img:'./Nueva carpeta/press militar.jpg' },
+    rem_manuelles:              { name:'Rem amb manuelles', metric:'weight', unit:'per_hand', start:8, inc:1, range:[10,12], cat:'pull', img:'./Nueva carpeta/remo.jpg' },
+    push_ups:                   { name:'Push-ups', metric:'bodyweight', unit:null, range:[8,12], cat:'push', img:'./Nueva carpeta/pushup.jpg' },
+    triceps_polea:              { name:'Tríceps a polea', metric:'weight', unit:'total', start:12, inc:2.5, range:[10,12], cat:'push', img:'./Nueva carpeta/tricep.jpg' },
+    face_pull:                  { name:'Face pull a polea', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'pull', img:'./Nueva carpeta/Facepull.jpg' },
+    plank:                      { name:'Plank', metric:'time', unit:'s', range:[30,45], cat:'hold', img:'./Nueva carpeta/plank.jpg' },
+    goblet_squat:               { name:'Goblet squat', metric:'weight', unit:'total', start:14, inc:2.5, range:[10,12], cat:'leg', img:'./Nueva carpeta/goblet.jpeg' },
+    step_up:                    { name:'Step-up al banc', metric:'weight', unit:'per_hand', start:6, inc:1, range:[10,10], cat:'leg', img:'./Nueva carpeta/step up.jpg' },
+    kickback_politja:            { name:'Kickback a politja', metric:'weight', unit:'total', start:null, inc:2.5, range:[12,15], cat:'glute', img:'./Nueva carpeta/kickback.jpg' },
+    reverse_crunch:             { name:'Reverse crunch', metric:'bodyweight', unit:null, range:[10,15], cat:'core', img:'./Nueva carpeta/reverse.jpg' },
+    side_plank:                 { name:'Side plank', metric:'time', unit:'s', range:[20,40], cat:'hold', img:'./Nueva carpeta/side.jpg' }
   };
 
   const ROUTINES = [
@@ -182,18 +184,13 @@
     if (cat.metric === 'bodyweight') return 'reps';
     return cat.unit === 'per_hand' ? 'kg/mà' : 'kg';
   }
-function icon(category) {
-  const c = 'viewBox="0 0 48 48" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
-  switch (category) {
-    case 'glute': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 23 M22 23 L12 33 M22 23 L33 29 M12 33 L9 43 M33 29 L37 39"/></svg>';
-    case 'leg': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 21 M24 21 L16 29 L16 41 M24 21 L32 29 L32 41"/></svg>';
-    case 'pull': return '<svg ' + c + '><circle cx="15" cy="9" r="4"/><path d="M15 13 L15 25 M15 25 L9 37 M15 25 L25 21 L37 25"/></svg>';
-    case 'push': return '<svg ' + c + '><circle cx="24" cy="7" r="4"/><path d="M24 11 L24 25 M24 13 L12 5 M24 13 L36 5 M24 25 L16 39 M24 25 L32 39"/></svg>';
-    case 'core': return '<svg ' + c + '><circle cx="22" cy="9" r="4"/><path d="M22 13 L22 25 M22 25 L12 39 M22 25 L33 33 M16 21 L29 29"/></svg>';
-    case 'hold': return '<svg ' + c + '><circle cx="24" cy="24" r="15"/><path d="M24 24 L24 14 M24 24 L30 28 M19 6 L29 6"/></svg>';
-    default: return '<svg ' + c + '><circle cx="24" cy="24" r="4"/></svg>';
+
+  function renderExerciseImage(cat) {
+    if (cat.img) {
+      return '<img src="' + cat.img + '" alt="' + cat.name + '" onerror="this.style.display=\'none\';">';
+    }
+    return '';
   }
-}
 
   function paletteColor(i) { return 'hsl(' + ((i * 47) % 360) + ',55%,58%)'; }
   function colorForCount(count) {
@@ -417,7 +414,7 @@ function icon(category) {
 
     return '<div class="gl-card">' +
       '<div class="gl-card-head" data-toggle="' + exId + '">' +
-        '<div class="gl-icon">' + icon(cat.cat) + '</div>' +
+        '<div class="gl-icon">' + renderExerciseImage(cat) + '</div>' +
         '<div class="gl-card-info">' +
           '<div class="gl-card-name">' + cat.name + '</div>' +
           '<div class="gl-card-line">' + anteriorLine + '</div>' +
@@ -537,11 +534,18 @@ function icon(category) {
     }));
 
     root.querySelectorAll('[data-hmnav]').forEach(b => b.addEventListener('click', e => {
-      const nav = e.currentTarget.getAttribute('data-hmnav');
-      if (nav === 'prevmonth') { hmMonth--; if (hmMonth < 0) { hmMonth = 11; hmYear--; } }
-      if (nav === 'nextmonth') { hmMonth++; if (hmMonth > 11) { hmMonth = 0; hmYear++; } }
-      if (nav === 'prevyear') { if (activeTab === 'heatmap') globalYear--; else hmYear--; }
-      if (nav === 'nextyear') { if (activeTab === 'heatmap') globalYear++; else hmYear++; }
+      const action = e.currentTarget.getAttribute('data-hmnav');
+      if (action === 'prevmonth') {
+        hmMonth--;
+        if (hmMonth < 0) { hmMonth = 11; hmYear--; }
+      } else if (action === 'nextmonth') {
+        hmMonth++;
+        if (hmMonth > 11) { hmMonth = 0; hmYear++; }
+      } else if (action === 'prevyear') {
+        globalYear--;
+      } else if (action === 'nextyear') {
+        globalYear++;
+      }
       render();
     }));
 
